@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# secret script
+spotify_secrets.py
+
 # Distribution / packaging
 .Python
 build/
