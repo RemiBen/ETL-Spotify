@@ -16,7 +16,6 @@ def extract():
     # time
     yesterday_datetime = datetime.now() - timedelta(days=1)
     yesterday_timestamp_milliseconds = int(yesterday_datetime.timestamp()) * 1000
-    yesterday_timestamp_milliseconds = int(yesterday_datetime.timestamp()) * 1000
 
     # headers of our request
     headers = {
