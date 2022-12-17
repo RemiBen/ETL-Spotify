@@ -7,7 +7,7 @@ import sqlite3
 
 # constants
 # care token might expire after several minutes (will do an error 401)
-TOKEN = "BQA_t0AmJz5oJA5Tws6jWRNZCFgWLKk3kDW4KmjcV4zIpdYOBM9XrFvudTHePIWfMo1tIxfuCFZOtX3AgMDL8oZFviLyHN9yZBbyZlhYftvxsFKppz9i-7tWtPFbDQ6a1ry9jKRD0tEQUF2PyRPH8n6boICIvoZA_1JOth_PQzYB4V4Bssw"
+TOKEN = "BQBO2uNynfzFsnFVfyjg1fK_-8EflU929xv6Jm1l8dSNGgNR1YE81blWMiujoQd9mZU_kxf-WZknbDQN1trjedkCx6I06HfT_Ei6tC4GzE-BWhLgXkrotvZIrSPT437X0RcgtzIRulmo19i_o9CVL9tTTaTNlKEGiNJlyZmHQiEgQpBDNovBjQ"
 DATABASE_LOCATION = "sqlite:///my_played_tracks.sqlite"
 
 def check_if_valid_data(df: pd.DataFrame) -> bool:
