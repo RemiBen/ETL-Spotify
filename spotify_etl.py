@@ -8,7 +8,6 @@ import spotipy.util as util
 from spotify_secrets import *
 from datetime import datetime, timedelta
 from prefect import task, flow
-from prefect.orion.schemas.schedules import CronSchedule
 
 @task
 def get_spotify_token():
