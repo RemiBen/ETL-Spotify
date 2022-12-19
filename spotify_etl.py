@@ -3,15 +3,28 @@ import pandas as pd
 import json
 import sqlalchemy
 import sqlite3
+import spotipy
+import spotipy.util as util
+from spotify_secrets import *
 from datetime import datetime, timedelta
 from prefect import task, flow
 from prefect.orion.schemas.schedules import CronSchedule
 
 @task
-def extract():
+def get_spotify_token():
 
-    # care : token might expire after several minutes (will do an error 401)
-    TOKEN = "BQCTftSGwZyXi5-yNTcSHygNGhcLWWttt5bGOo1u0fDO_ABmZwEwW5M2A6oIqT2qEZTCDnSWLe1FWO-RCqpTzRpg0RmpV1CSlh-Tvuvk05_eZElaIfzbaMFykuQ0PIz9JQ0sChtAt5NHTR-UCE3FOZDLXJisUYtuE9GrZ5nJ1IOD8UBlL0k"
+    # Storing a dummy uri and the data's scope
+    redirect_uri = "http://localhost:8888/callback"
+    scope = "user-read-recently-played"
+
+    # Spotify's authentification, gives our token if successful
+    spotify_token = util.prompt_for_user_token(username, scope, client_id=client_id, client_secret=client_secret, redirect_uri=redirect_uri)
+
+    return spotify_token
+
+
+@task
+def extract(spotify_token):
 
     # time
     yesterday_datetime = datetime.now() - timedelta(days=1)
@@ -21,7 +34,7 @@ def extract():
     headers = {
         "Accept" : "application/json",
         "Content-Type" : "application/json",
-        "Authorization" : "Bearer {token}".format(token=TOKEN)
+        "Authorization" : "Bearer {token}".format(token=spotify_token)
     }
 
     # making our request
@@ -117,8 +130,11 @@ def load(df: pd.DataFrame):
 @flow
 def ETL():
     
+    # Retrieve our spotify token
+    spotify_token = get_spotify_token()
+
     # Extract
-    df_songs = extract()
+    df_songs = extract(spotify_token)
 
     # Transform
     if transform(df_songs):
