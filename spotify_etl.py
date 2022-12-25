@@ -122,6 +122,10 @@ def load(df: pd.DataFrame):
     except:
         print("Data already exists in the database")
 
+    # Count the number of rows inserted
+    n_rows = len(df.index)
+    print(str(n_rows) + " rows inserted")
+
     connection.close()
     print("Close database successfully")
 
