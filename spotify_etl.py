@@ -3,26 +3,34 @@ import pandas as pd
 import json
 import sqlalchemy
 import sqlite3
+import spotipy
+from spotify_secrets import *
 from datetime import datetime, timedelta
-from prefect import task, flow
-from prefect.orion.schemas.schedules import CronSchedule
 
-@task
-def extract():
 
-    # care : token might expire after several minutes (will do an error 401)
-    TOKEN = "BQCTftSGwZyXi5-yNTcSHygNGhcLWWttt5bGOo1u0fDO_ABmZwEwW5M2A6oIqT2qEZTCDnSWLe1FWO-RCqpTzRpg0RmpV1CSlh-Tvuvk05_eZElaIfzbaMFykuQ0PIz9JQ0sChtAt5NHTR-UCE3FOZDLXJisUYtuE9GrZ5nJ1IOD8UBlL0k"
+def get_spotify_token():
+
+    # Storing a dummy uri and the data's scope
+    redirect_uri = "http://localhost:8888/callback"
+    scope = "user-read-recently-played"
+
+    # Spotify's authentification, gives our token if successful
+    spotify_token = spotipy.util.prompt_for_user_token(username, scope, client_id=client_id, client_secret=client_secret, redirect_uri=redirect_uri)
+
+    return spotify_token
+
+
+def extract(spotify_token):
 
     # time
     yesterday_datetime = datetime.now() - timedelta(days=1)
-    yesterday_timestamp_milliseconds = int(yesterday_datetime.timestamp()) * 1000
     yesterday_timestamp_milliseconds = int(yesterday_datetime.timestamp()) * 1000
 
     # headers of our request
     headers = {
         "Accept" : "application/json",
         "Content-Type" : "application/json",
-        "Authorization" : "Bearer {token}".format(token=TOKEN)
+        "Authorization" : "Bearer {token}".format(token=spotify_token)
     }
 
     # making our request
@@ -55,7 +63,6 @@ def extract():
     return df
 
 
-@task
 def transform(df: pd.DataFrame) -> bool:
 
     # check if dataframe is empty 
@@ -84,7 +91,6 @@ def transform(df: pd.DataFrame) -> bool:
     return True
 
 
-@task
 def load(df: pd.DataFrame):
 
     DATABASE_LOCATION = "sqlite:///my_played_tracks.sqlite"
@@ -111,15 +117,21 @@ def load(df: pd.DataFrame):
     except:
         print("Data already exists in the database")
 
+    # Count the number of rows inserted
+    n_rows = len(df.index)
+    print(str(n_rows) + " rows inserted")
+
     connection.close()
     print("Close database successfully")
 
 
-@flow
 def ETL():
     
+    # Retrieve our spotify token
+    spotify_token = get_spotify_token()
+
     # Extract
-    df_songs = extract()
+    df_songs = extract(spotify_token)
 
     # Transform
     if transform(df_songs):
