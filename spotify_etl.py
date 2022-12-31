@@ -9,18 +9,23 @@ from datetime import datetime, timedelta
 
 
 def get_spotify_token():
+    # function to retrieve a token in order to request Spotify's API
 
     # Storing a dummy uri and the data's scope
     redirect_uri = "http://localhost:8888/callback"
     scope = "user-read-recently-played"
 
     # Spotify's authentification, gives our token if successful
-    spotify_token = spotipy.util.prompt_for_user_token(username, scope, client_id=client_id, client_secret=client_secret, redirect_uri=redirect_uri)
+    spotify_token = spotipy.util.prompt_for_user_token(
+        username, scope, client_id=client_id,
+         client_secret=client_secret, redirect_uri=redirect_uri
+    )
 
     return spotify_token
 
 
 def extract(spotify_token):
+    # function to retrieve our data from Spotify's API
 
     # time
     yesterday_datetime = datetime.now() - timedelta(days=1)
@@ -34,7 +39,10 @@ def extract(spotify_token):
     }
 
     # making our request
-    r = requests.get("https://api.spotify.com/v1/me/player/recently-played?after={time}".format(time=yesterday_timestamp_milliseconds), headers = headers)
+    r = requests.get(
+        "https://api.spotify.com/v1/me/player/recently-played?after={time}".format(time=yesterday_timestamp_milliseconds),
+        headers = headers
+    )
     data = r.json()
 
     # creating lists, we'll fill them with the data from the json
@@ -52,10 +60,10 @@ def extract(spotify_token):
 
     # storing the data into a dictionnary
     dictionary = {
-    "artist_names":artist_names,
-    "song_names":song_names,
-    "played_at":played_at,
-    "timestamps":timestamps
+        "artist_names":artist_names,
+        "song_names":song_names,
+        "played_at":played_at,
+        "timestamps":timestamps
     }
 
     # converting my dictionnary into a dataframe
@@ -64,6 +72,7 @@ def extract(spotify_token):
 
 
 def transform(df: pd.DataFrame) -> bool:
+    # function to validate our data
 
     # check if dataframe is empty 
     if df.empty:
@@ -92,13 +101,17 @@ def transform(df: pd.DataFrame) -> bool:
 
 
 def load(df: pd.DataFrame):
+    # function to load our data into our SQLite database
 
+    # store our database URL
     DATABASE_LOCATION = "sqlite:///my_played_tracks.sqlite"
 
+    # create our engine, connection and cursor to execute our SQL query
     engine= sqlalchemy.create_engine(DATABASE_LOCATION)
     connection = sqlite3.connect('my_played_tracks.sqlite')
     cursor = connection.cursor()
 
+    # our SQL query to create the table if it doesn't exist
     sql_query = """
     CREATE TABLE IF NOT EXISTS my_played_tracks(
         song_names VARCHAR(200),
@@ -109,9 +122,12 @@ def load(df: pd.DataFrame):
     )
     """
 
+    # execute our query
     cursor.execute(sql_query)
     print("Opened database successfully")
 
+    # write records stored in our dataframe into our SQLite database,
+    # if data already exists, then abort writing
     try:
         df.to_sql("my_played_tracks", engine, index=False, if_exists='append')
     except:
@@ -119,14 +135,16 @@ def load(df: pd.DataFrame):
 
     # Count the number of rows inserted
     n_rows = len(df.index)
-    print(str(n_rows) + " rows inserted")
+    print(f"{n_rows} rows inserted")
 
+    # close our database connection
     connection.close()
     print("Close database successfully")
 
 
-def ETL():
-    
+def etl():
+    # ETL function
+
     # Retrieve our spotify token
     spotify_token = get_spotify_token()
 
@@ -142,4 +160,5 @@ def ETL():
 
 
 if __name__ == "__main__":
-    ETL()
+    # execute our ETL function
+    etl()
