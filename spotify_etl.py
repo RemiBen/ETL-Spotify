@@ -4,12 +4,10 @@ import json
 import sqlalchemy
 import sqlite3
 import spotipy
-import spotipy.util as util
 from spotify_secrets import *
 from datetime import datetime, timedelta
-from prefect import task, flow
 
-@task
+
 def get_spotify_token():
 
     # Storing a dummy uri and the data's scope
@@ -17,12 +15,11 @@ def get_spotify_token():
     scope = "user-read-recently-played"
 
     # Spotify's authentification, gives our token if successful
-    spotify_token = util.prompt_for_user_token(username, scope, client_id=client_id, client_secret=client_secret, redirect_uri=redirect_uri)
+    spotify_token = spotipy.util.prompt_for_user_token(username, scope, client_id=client_id, client_secret=client_secret, redirect_uri=redirect_uri)
 
     return spotify_token
 
 
-@task
 def extract(spotify_token):
 
     # time
@@ -66,7 +63,6 @@ def extract(spotify_token):
     return df
 
 
-@task
 def transform(df: pd.DataFrame) -> bool:
 
     # check if dataframe is empty 
@@ -95,7 +91,6 @@ def transform(df: pd.DataFrame) -> bool:
     return True
 
 
-@task
 def load(df: pd.DataFrame):
 
     DATABASE_LOCATION = "sqlite:///my_played_tracks.sqlite"
@@ -130,7 +125,6 @@ def load(df: pd.DataFrame):
     print("Close database successfully")
 
 
-@flow
 def ETL():
     
     # Retrieve our spotify token
